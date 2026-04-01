@@ -1,7 +1,39 @@
 import streamlit as st
 from transformers import pipeline
 
+import streamlit as st
+from transformers import pipeline
 
+# ==========================================
+# 🔒 第一道防线：密码拦截区
+# ==========================================
+# type="password" 会让输入的内容变成小黑点保护隐私
+pwd = st.text_input("请输入专属访问密码 🔑：", type="password")
+
+# 这里设置你的密码
+if pwd != "sirenbang":
+    if pwd != "":  # 如果用户输入了东西但不对，给个报错提示
+        st.error("密码错误，禁止访问！🛑")
+
+    # 【核心魔法】：密码不对，立刻停止！后面的深度学习模型根本不会被唤醒
+    st.stop()
+
+# ==========================================
+# 🔓 密码正确后，才会执行下面的深度学习代码
+# ==========================================
+st.success("密码正确，欢迎长官！")
+
+
+@st.cache_resource
+def load_model():
+    return pipeline("zero-shot-classification", model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
+
+
+st.title("🚀 深度学习新闻分析大脑")
+st.write("告别死板的规则！你随便定几个标签，AI 都能凭借常识自己完成分类。")
+
+
+# ... (保留你之前剩下的所有代码，不用改) ...
 # 1. 缓存加载模型（这步超级关键，防止网页每次刷新都重新下载几十MB的模型）
 @st.cache_resource
 def load_model():
