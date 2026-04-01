@@ -1,66 +1,43 @@
 import streamlit as st
-from datasets import load_dataset
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.svm import LinearSVC
-from sklearn.pipeline import Pipeline
-
-# 1. 设置一个专属密码
-MY_PASSWORD = "sirenbang"
-
-# 2. 创建密码输入框
-password_attempt = st.text_input("请输入访问密码：", type="password")
-
-# 3. 判断逻辑
-if password_attempt != MY_PASSWORD:
-    st.warning("密码错误或未输入密码，请重试。")
-    st.stop() # 密码不对？直接让程序在这里停下，不加载后面的内容！
-
-# ======== 下面继续写你原来的 AI 助手代码 ========
-st.success("密码正确，欢迎使用 AI 新闻助手！")
-# ... (原来加载模型和预测的代码) ...
+from transformers import pipeline
 
 
-# 核心秘诀：使用 @st.cache_resource 缓存模型。
-# 这样哪怕网页刷新，模型也只需要训练一次，不会每次点击都重新训练！
+# 1. 缓存加载模型（这步超级关键，防止网页每次刷新都重新下载几十MB的模型）
 @st.cache_resource
-def load_and_train_model():
-    dataset = load_dataset("ag_news")
-    train_texts = dataset['train']['text']
-    train_labels = dataset['train']['label']
-
-    pipeline = Pipeline([
-        ('tfidf', TfidfVectorizer(max_features=20000, stop_words='english')),
-        ('clf', LinearSVC(random_state=42))
-    ])
-    pipeline.fit(train_texts, train_labels)
-    return pipeline
+def load_model():
+    # 这里我们借用一个支持中文的轻量级深度学习预训练模型
+    return pipeline("zero-shot-classification", model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
 
 
-# ================= 网页界面设计 =================
+st.title("🚀 深度学习新闻分析大脑")
+st.write("告别死板的规则！你随便定几个标签，AI 都能凭借常识自己完成分类。")
 
-# 1. 网页标题和说明
-st.set_page_config(page_title="AI 新闻助手", page_icon="📰")
-st.title("📰 AI 新闻助手")
-st.markdown("这是一个基于传统机器学习 (TF-IDF + SVM) 的新闻分类系统。")
+# 正在加载模型的提示
+with st.spinner("正在唤醒深度学习模型...（首次加载约需1分钟，请耐心等待）"):
+    classifier = load_model()
 
-# 2. 加载模型（带加载动画）
-with st.spinner("AI 正在启动并加载数据集（首次加载可能需要半分钟）..."):
-    classifier = load_and_train_model()
+# 2. 设置界面输入框
+default_text = "最新的人工智能大模型在自然语言处理领域取得了重大突破。同时，关于如何通过宪法和相关法规来规范AI技术的讨论，也成为了近期多边外交与国际关系的重要议题。"
+user_input = st.text_area("📝 输入一篇新闻或文章段落：", default_text, height=150)
 
-# 3. 用户输入区
-user_input = st.text_area("请输入一段新闻文本 (英文)：", height=150,
-                          placeholder="例如：Apple announces the new iPhone with AI features...")
+# 让用户自己定义标签
+labels_input = st.text_input("🏷️ 设定你想要的分类标签（用英文逗号隔开）：", "人工智能, 国际政治, 足球赛事, 基础科学")
 
-# 4. 按钮与预测逻辑
-if st.button("🚀 开启 AI 智能预测", type="primary"):
-    if user_input.strip() == "":
-        st.warning("请先输入一些新闻内容哦！")
+# 3. 运行分析
+if st.button("开始深度理解"):
+    if user_input and labels_input:
+        with st.spinner("AI 正在阅读字里行间的语义..."):
+            # 把用户输入的标签用逗号切分成列表
+            labels = [label.strip() for label in labels_input.split(",")]
+
+            # 把文章和标签扔给模型
+            result = classifier(user_input, labels)
+
+            st.success("分析完成！请看 AI 给出的置信度：")
+
+            # 4. 把 AI 给出的概率用进度条直观地画出来
+            for label, score in zip(result['labels'], result['scores']):
+                st.write(f"**{label}**: {score * 100:.1f}%")
+                st.progress(float(score))
     else:
-        # 进行预测
-        categories = ["🌍 世界 (World)", "⚽ 体育 (Sports)", "💰 财经 (Business)", "💻 科技 (Sci/Tech)"]
-        pred_idx = classifier.predict([user_input])[0]
-
-        # 显示结果
-        st.success("预测成功！")
-        st.metric(label="AI 分类结果", value=categories[pred_idx])
-        st.balloons()  # 预测成功放个气球特效！
+        st.warning("文章和标签都不能为空哦！")
