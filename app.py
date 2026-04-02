@@ -41,9 +41,6 @@ def load_model():
     return pipeline("zero-shot-classification", model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
 
 
-st.title("🚀 深度学习新闻分析大脑")
-st.write("告别死板的规则！你随便定几个标签，AI 都能凭借常识自己完成分类。")
-
 # 正在加载模型的提示
 with st.spinner("正在唤醒深度学习模型...（首次加载约需1分钟，请耐心等待）"):
     classifier = load_model()
