@@ -11,7 +11,7 @@ from transformers import pipeline
 pwd = st.text_input("请输入专属访问密码 🔑：", type="password")
 
 # 这里设置你的密码
-if pwd != "sirenbang":
+if pwd != "SHU1234":
     if pwd != "":  # 如果用户输入了东西但不对，给个报错提示
         st.error("密码错误，禁止访问！🛑")
 
