@@ -53,7 +53,7 @@ user_input = st.text_area("📝 输入一篇新闻或文章段落：", default_t
 labels_input = st.text_input("🏷️ 设定你想要的分类标签（用英文逗号隔开）：", "人工智能, 国际政治, 足球赛事, 基础科学")
 
 # 3. 运行分析
-if st.button("开始深度理解"):
+if st.button("开始分类"):
     if user_input and labels_input:
         with st.spinner("AI 正在阅读字里行间的语义..."):
             # 把用户输入的标签用逗号切分成列表
